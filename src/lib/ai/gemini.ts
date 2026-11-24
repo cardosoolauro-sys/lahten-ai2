@@ -1,65 +1,58 @@
-import { GoogleGenAI } from "@google/genai";
+import { AiError, type ChatMessage } from "./types";
 
-// Somente servidor: a chave nunca é enviada ao navegador.
+const SYSTEM_PROMPT = [
+  "Você é o assistente da LAHTEN AI, uma plataforma de inteligência artificial para imobiliárias no Brasil.",
+  "Responda sempre em português do Brasil, de forma clara, profissional e objetiva.",
+  "Ajude com rotinas do mercado imobiliário: atendimento a clientes, anúncios, contratos, locação, vendas e organização do trabalho.",
+  "Não invente dados, valores, leis ou números. Se não tiver certeza, diga isso.",
+  "Você não é advogado nem consultor financeiro: em temas jurídicos e financeiros, recomende validar com um profissional.",
+].join(" ");
 
-export type ChatTurn = { role: "user" | "assistant"; content: string };
-
-export class AiNotConfiguredError extends Error {
-  constructor() {
-    super("GEMINI_API_KEY ou GEMINI_MODEL não configurados.");
-    this.name = "AiNotConfiguredError";
-  }
-}
-
-export function isAiConfigured(): boolean {
-  return Boolean(process.env.GEMINI_API_KEY && process.env.GEMINI_MODEL);
-}
-
-const SYSTEM_PROMPT =
-  "Você é o assistente da LAHTEN AI, uma plataforma de IA para imobiliárias brasileiras. " +
-  "Responda sempre em português do Brasil, de forma clara e objetiva. " +
-  "Não invente dados de imóveis, contratos, valores ou clientes: se não tiver a informação, diga que não tem.";
-
-type GeminiTurn = { role: "user" | "model"; parts: { text: string }[] };
-
-function toGeminiContents(history: ChatTurn[]): GeminiTurn[] {
-  const contents: GeminiTurn[] = [];
-
-  for (const turn of history) {
-    const role = turn.role === "assistant" ? "model" : "user";
-    const last = contents[contents.length - 1];
-    if (last && last.role === role) {
-      // Junta turnos seguidos do mesmo papel (ex.: mensagem enviada sem resposta).
-      last.parts.push({ text: turn.content });
-    } else {
-      contents.push({ role, parts: [{ text: turn.content }] });
-    }
-  }
-
-  // O Gemini exige que a conversa comece por uma mensagem do usuário.
-  while (contents.length > 0 && contents[0].role !== "user") {
-    contents.shift();
-  }
-
-  return contents;
-}
-
-export async function generateReply(history: ChatTurn[]): Promise<string> {
+export async function geminiReply(messages: ChatMessage[]): Promise<string> {
   const apiKey = process.env.GEMINI_API_KEY;
   const model = process.env.GEMINI_MODEL;
-  if (!apiKey || !model) throw new AiNotConfiguredError();
 
-  const contents = toGeminiContents(history);
-  if (contents.length === 0) throw new Error("Conversa sem mensagem do usuário.");
+  if (!apiKey || !model || !/^[a-z0-9.\-]+$/i.test(model)) {
+    throw new AiError("not_configured", "Gemini não configurado.");
+  }
 
-  const ai = new GoogleGenAI({ apiKey });
-  const response = await ai.models.generateContent({
-    model,
-    contents,
-    config: { systemInstruction: SYSTEM_PROMPT },
-  });
+  const response = await fetch(
+    `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`,
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "x-goog-api-key": apiKey,
+      },
+      body: JSON.stringify({
+        systemInstruction: { parts: [{ text: SYSTEM_PROMPT }] },
+        contents: messages.map((m) => ({
+          role: m.role === "assistant" ? "model" : "user",
+          parts: [{ text: m.content }],
+        })),
+        generationConfig: { maxOutputTokens: 2048 },
+      }),
+      signal: AbortSignal.timeout(50_000),
+      cache: "no-store",
+    }
+  );
 
-  const text = response.text?.trim();
-  if (!text) throw new Error("A IA devolveu uma resposta vazia.");
+  if (response.status === 429) {
+    throw new AiError("rate_limited", "Limite do Gemini atingido.");
+  }
+  if (!response.ok) {
+    throw new AiError("failed", `Gemini respondeu com status ${response.status}.`);
+  }
+
+  const data = await response.json();
+  const parts = data?.candidates?.[0]?.content?.parts;
+  const text = Array.isArray(parts)
+    ? parts
+        .map((p: { text?: string }) => p.text ?? "")
+        .join("")
+        .trim()
+    : "";
+
+  if (!text) throw new AiError("failed", "Resposta vazia do Gemini.");
   return text;
 }
