@@ -3,9 +3,7 @@ import { notFound } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 import MessageForm from "@/components/workspace/MessageForm";
 import { createClient } from "@/lib/supabase/server";
-import { isAiConfigured } from "@/lib/ai/gemini";
 
-// A chamada à IA roda dentro da server action desta página.
 export const maxDuration = 60;
 
 const UUID_RE =
@@ -59,12 +57,10 @@ export default async function ConversationPage({
         </h1>
       </div>
 
-      {!isAiConfigured() && (
-        <div className="rounded-lg border border-electric/30 bg-electric/10 px-4 py-3 text-sm text-electric-soft">
-          A IA ainda não está configurada neste ambiente. As mensagens são
-          salvas, mas não há resposta automática.
-        </div>
-      )}
+      <div className="rounded-lg border border-amber-400/30 bg-amber-400/10 px-4 py-3 text-sm text-amber-200">
+        IA em modo de teste (Gemini, plano gratuito). Use apenas dados
+        fictícios: não envie informações reais de clientes.
+      </div>
 
       <div className="min-h-[40vh] space-y-3">
         {messages.length === 0 && (
