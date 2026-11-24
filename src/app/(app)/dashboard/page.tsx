@@ -1,13 +1,10 @@
+import Link from "next/link";
+import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 
-interface ActivityRow {
-  id: string;
-  kind: string;
-  description: string;
-  created_at: string;
-}
+export const dynamic = "force-dynamic";
 
-const kindLabels: Record<string, string> = {
+const ACTIVITY_LABELS: Record<string, string> = {
   note: "Nota",
   call: "Ligação",
   visit: "Visita",
@@ -15,51 +12,75 @@ const kindLabels: Record<string, string> = {
   task: "Tarefa",
 };
 
-const agents = [
-  "Sales Agent",
-  "Rental Agent",
-  "Research Agent",
-  "Document Agent",
-  "Financial Agent",
-  "Customer Agent",
-  "Operations Agent",
-];
-
-function formatCount(result: { count: number | null; error: unknown }): string {
-  return result.error ? "—" : String(result.count ?? 0);
-}
-
-function formatDate(iso: string): string {
-  return new Date(iso).toLocaleString("pt-BR", {
-    day: "2-digit",
-    month: "2-digit",
-    hour: "2-digit",
-    minute: "2-digit",
-    timeZone: "America/Sao_Paulo",
-  });
+async function criarOrganizacao(formData: FormData) {
+  "use server";
+  const nome = String(formData.get("nome") ?? "").trim();
+  if (!nome) return;
+  const supabase = await createClient();
+  await supabase.rpc("create_organization", { p_name: nome });
+  revalidatePath("/dashboard");
 }
 
 export default async function DashboardPage() {
   const supabase = await createClient();
 
-  // O RLS do banco já limita tudo às organizações do usuário logado.
-  const [properties, leads, deals, rentals, activities] = await Promise.all([
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    return (
+      <main style={{ padding: "2rem", maxWidth: 560 }}>
+        <h1>Dashboard</h1>
+        <p>Entre na sua conta para ver os números da operação.</p>
+        <p>
+          <Link href="/login">Entrar</Link>
+        </p>
+      </main>
+    );
+  }
+
+  const { count: orgCount } = await supabase
+    .from("memberships")
+    .select("org_id", { count: "exact", head: true });
+
+  if (!orgCount) {
+    return (
+      <main style={{ padding: "2rem", maxWidth: 560 }}>
+        <h1>Dashboard</h1>
+        <p>Você ainda não pertence a nenhuma imobiliária. Crie a primeira para começar.</p>
+        <form action={criarOrganizacao} style={{ display: "flex", gap: 8 }}>
+          <input
+            name="nome"
+            placeholder="Nome da imobiliária"
+            required
+            style={{ flex: 1, padding: "0.5rem" }}
+          />
+          <button type="submit" style={{ padding: "0.5rem 1rem" }}>
+            Criar imobiliária
+          </button>
+        </form>
+      </main>
+    );
+  }
+
+  const [imoveis, leads, negociacoes, locacoes, atividades] = await Promise.all([
     supabase
       .from("properties")
-      .select("*", { count: "exact", head: true })
-      .eq("status", "available"),
+      .select("id", { count: "exact", head: true })
+      .in("status", ["available", "reserved"]),
     supabase
       .from("contacts")
-      .select("*", { count: "exact", head: true })
+      .select("id", { count: "exact", head: true })
       .eq("kind", "lead")
       .eq("status", "new"),
     supabase
       .from("deals")
-      .select("*", { count: "exact", head: true })
-      .not("stage", "in", "(won,lost)"),
+      .select("id", { count: "exact", head: true })
+      .in("stage", ["proposal", "visit", "negotiation"]),
     supabase
       .from("rentals")
-      .select("*", { count: "exact", head: true })
+      .select("id", { count: "exact", head: true })
       .eq("status", "active"),
     supabase
       .from("activities")
@@ -68,108 +89,62 @@ export default async function DashboardPage() {
       .limit(5),
   ]);
 
-  const stats = [
-    { label: "Imóveis disponíveis", value: formatCount(properties) },
-    { label: "Leads novos", value: formatCount(leads) },
-    { label: "Negociações em andamento", value: formatCount(deals) },
-    { label: "Locações ativas", value: formatCount(rentals) },
+  const cards = [
+    { label: "Imóveis ativos", value: imoveis.count ?? 0 },
+    { label: "Leads novos", value: leads.count ?? 0 },
+    { label: "Negociações em andamento", value: negociacoes.count ?? 0 },
+    { label: "Locações ativas", value: locacoes.count ?? 0 },
   ];
 
-  const items = (activities.data ?? []) as ActivityRow[];
-  const hasError = [properties, leads, deals, rentals, activities].some(
-    (result) => result.error,
-  );
-  const isEmpty =
-    !hasError &&
-    [properties, leads, deals, rentals].every(
-      (result) => (result.count ?? 0) === 0,
-    ) &&
-    items.length === 0;
+  const recentes = atividades.data ?? [];
 
   return (
-    <div className="mx-auto max-w-6xl space-y-6">
-      <div>
-        <h1 className="text-2xl font-semibold tracking-tight">Dashboard</h1>
-        <p className="mt-1 text-sm text-slate-400">
-          Visão geral da operação da imobiliária.
-        </p>
-      </div>
+    <main style={{ padding: "2rem", maxWidth: 960 }}>
+      <h1>Dashboard</h1>
+      <p>Visão geral da operação da imobiliária.</p>
 
-      {hasError && (
-        <div
-          role="alert"
-          className="rounded-lg border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-300"
-        >
-          Não foi possível carregar alguns dados. Atualize a página para tentar
-          de novo.
-        </div>
-      )}
-
-      {isEmpty && (
-        <div className="rounded-lg border border-electric/30 bg-electric/10 px-4 py-3 text-sm text-electric-soft">
-          Ainda não há dados cadastrados. Os números abaixo vêm direto do banco
-          e vão aparecer conforme imóveis, contatos, negociações e locações
-          forem cadastrados. Esses cadastros ainda estão em construção.
-        </div>
-      )}
-
-      <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
-        {stats.map((s) => (
+      <section
+        style={{
+          display: "grid",
+          gridTemplateColumns: "repeat(auto-fit, minmax(190px, 1fr))",
+          gap: "1rem",
+          margin: "1.5rem 0",
+        }}
+      >
+        {cards.map((c) => (
           <div
-            key={s.label}
-            className="rounded-xl border border-navy-700 bg-navy-900 p-4"
+            key={c.label}
+            style={{
+              border: "1px solid color-mix(in srgb, currentColor 20%, transparent)",
+              borderRadius: 8,
+              padding: "1rem",
+            }}
           >
-            <p className="text-xs text-slate-400">{s.label}</p>
-            <p className="mt-2 text-2xl font-semibold">{s.value}</p>
+            <div style={{ fontSize: "2rem", fontWeight: 600 }}>{c.value}</div>
+            <div style={{ opacity: 0.7 }}>{c.label}</div>
           </div>
         ))}
-      </div>
+      </section>
 
-      <div className="grid gap-4 lg:grid-cols-3">
-        <section className="rounded-xl border border-navy-700 bg-navy-900 p-5 lg:col-span-2">
-          <h2 className="text-sm font-medium">Atividade recente</h2>
-          {items.length === 0 ? (
-            <p className="mt-4 text-sm text-slate-500">
-              Nenhuma atividade registrada ainda.
-            </p>
-          ) : (
-            <ul className="mt-4 space-y-3">
-              {items.map((a) => (
-                <li
-                  key={a.id}
-                  className="flex items-start gap-3 text-sm text-slate-300"
-                >
-                  <span className="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-electric" />
-                  <span className="flex-1">
-                    <span className="text-slate-500">
-                      {kindLabels[a.kind] ?? a.kind}:{" "}
-                    </span>
-                    {a.description}
-                  </span>
-                  <span className="shrink-0 text-xs text-slate-500">
-                    {formatDate(a.created_at)}
-                  </span>
-                </li>
-              ))}
-            </ul>
-          )}
-        </section>
-
-        <section className="rounded-xl border border-navy-700 bg-navy-900 p-5">
-          <h2 className="text-sm font-medium">Agentes de IA</h2>
-          <ul className="mt-4 space-y-3">
-            {agents.map((a) => (
-              <li
-                key={a}
-                className="flex items-center justify-between text-sm text-slate-300"
-              >
-                {a}
-                <span className="text-xs text-slate-500">Não conectado</span>
+      <section>
+        <h2>Atividade recente</h2>
+        {recentes.length === 0 ? (
+          <p>
+            Nenhuma atividade registrada ainda. Cadastre um imóvel ou um lead para começar.
+          </p>
+        ) : (
+          <ul style={{ paddingLeft: "1.2rem" }}>
+            {recentes.map((a) => (
+              <li key={a.id} style={{ marginBottom: 6 }}>
+                <strong>{ACTIVITY_LABELS[a.kind] ?? a.kind}:</strong> {a.description}{" "}
+                <span style={{ opacity: 0.6 }}>
+                  ({new Date(a.created_at).toLocaleDateString("pt-BR")})
+                </span>
               </li>
             ))}
           </ul>
-        </section>
-      </div>
-    </div>
+        )}
+      </section>
+    </main>
   );
 }
