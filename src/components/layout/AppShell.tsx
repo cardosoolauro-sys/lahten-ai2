@@ -4,18 +4,12 @@ import { useState } from "react";
 import Sidebar from "./Sidebar";
 import Topbar from "./Topbar";
 
-export interface ShellUser {
-  name: string;
-  email: string;
-  orgName: string;
-}
-
 export default function AppShell({
-  user,
   children,
+  orgName,
 }: {
-  user: ShellUser;
   children: React.ReactNode;
+  orgName?: string;
 }) {
   const [open, setOpen] = useState(false);
 
@@ -23,7 +17,7 @@ export default function AppShell({
     <div className="min-h-screen">
       <Sidebar open={open} onClose={() => setOpen(false)} />
       <div className="lg:pl-64">
-        <Topbar user={user} onMenu={() => setOpen(true)} />
+        <Topbar onMenu={() => setOpen(true)} orgName={orgName} />
         <main className="p-4 sm:p-6 lg:p-8">{children}</main>
       </div>
     </div>
