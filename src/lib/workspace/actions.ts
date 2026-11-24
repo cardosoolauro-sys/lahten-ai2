@@ -3,10 +3,17 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import {
+  AiNotConfiguredError,
+  generateReply,
+  type ChatTurn,
+} from "@/lib/ai/gemini";
 
 const UUID_RE =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const DEFAULT_TITLE = "Nova conversa";
+// Quantas mensagens recentes são enviadas à IA como contexto.
+const HISTORY_LIMIT = 20;
 
 export type MessageFormState = { error?: string; ok?: boolean } | undefined;
 
@@ -66,7 +73,68 @@ export async function sendMessage(
     .eq("id", conversationId)
     .eq("title", DEFAULT_TITLE);
 
-  revalidatePath(`/workspace/${conversationId}`);
-  revalidatePath("/workspace");
-  return { ok: true };
+  // A mensagem do usuário já está salva. Daqui em diante, qualquer falha
+  // só impede a resposta da IA e nada se perde.
+  const done = (): MessageFormState => {
+    revalidatePath(`/workspace/${conversationId}`);
+    revalidatePath("/workspace");
+    return { ok: true };
+  };
+  // ok: true limpa o campo (a mensagem já foi salva); error mostra o aviso.
+  const fail = (message: string): MessageFormState => {
+    revalidatePath(`/workspace/${conversationId}`);
+    return { ok: true, error: message };
+  };
+
+  // Limite diário por usuário e por organização (função do banco).
+  const { data: allowed, error: limitError } = await supabase.rpc(
+    "reserve_ai_call",
+    { p_conversation: conversationId }
+  );
+  if (limitError) {
+    return fail("Mensagem salva, mas não foi possível verificar o limite de uso da IA.");
+  }
+  if (allowed !== true) {
+    return fail("Mensagem salva. O limite diário de uso da IA foi atingido; tente novamente amanhã.");
+  }
+
+  // Histórico recente da conversa, do mais antigo para o mais novo.
+  const { data: recent, error: historyError } = await supabase
+    .from("messages")
+    .select("role, content")
+    .eq("conversation_id", conversationId)
+    .order("created_at", { ascending: false })
+    .limit(HISTORY_LIMIT);
+  if (historyError || !recent) {
+    return fail("Mensagem salva, mas não foi possível ler o histórico da conversa.");
+  }
+
+  const history: ChatTurn[] = recent
+    .filter((m) => m.role === "user" || m.role === "assistant")
+    .reverse()
+    .map((m) => ({ role: m.role as ChatTurn["role"], content: m.content }));
+
+  let reply: string;
+  try {
+    reply = await generateReply(history);
+  } catch (error) {
+    if (error instanceof AiNotConfiguredError) {
+      return fail("Mensagem salva. A IA ainda não está configurada neste ambiente.");
+    }
+    console.error(
+      "Erro ao chamar a IA:",
+      error instanceof Error ? error.message : "erro desconhecido"
+    );
+    return fail("Mensagem salva, mas a IA não respondeu. Tente novamente.");
+  }
+
+  const { error: saveError } = await supabase.rpc("save_ai_reply", {
+    p_conversation: conversationId,
+    p_content: reply,
+  });
+  if (saveError) {
+    return fail("A IA respondeu, mas não foi possível salvar a resposta.");
+  }
+
+  return done();
 }
