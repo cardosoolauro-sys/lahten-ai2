@@ -43,9 +43,9 @@ export default async function WorkspacePage({
         </form>
       </div>
 
-      <div className="rounded-lg border border-electric/30 bg-electric/10 px-4 py-3 text-sm text-electric-soft">
-        A IA ainda não está conectada. As mensagens são salvas, mas não há
-        resposta automática (prevista para a Tarefa 3.2).
+      <div className="rounded-lg border border-amber-400/30 bg-amber-400/10 px-4 py-3 text-sm text-amber-200">
+        IA em modo de teste (Gemini, plano gratuito). Use apenas dados
+        fictícios: não envie informações reais de clientes.
       </div>
 
       {erro && (
