@@ -13,7 +13,7 @@ export default function MessageForm({
   const [state, action, pending] = useActionState(sendMessage, undefined);
 
   useEffect(() => {
-    if (state?.ok) formRef.current?.reset();
+    if (state?.saved) formRef.current?.reset();
   }, [state]);
 
   return (
@@ -23,6 +23,11 @@ export default function MessageForm({
       className="sticky bottom-0 -mx-4 border-t border-navy-700 bg-navy-950 px-4 py-3 sm:mx-0 sm:px-0"
     >
       <input type="hidden" name="conversationId" value={conversationId} />
+      {pending && (
+        <p className="mb-2 text-sm text-electric-soft">
+          A IA está respondendo...
+        </p>
+      )}
       {state?.error && (
         <p className="mb-2 text-sm text-red-400">{state.error}</p>
       )}
