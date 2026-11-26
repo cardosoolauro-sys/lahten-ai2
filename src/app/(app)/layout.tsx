@@ -23,5 +23,12 @@ export default async function AppLayout({
     .eq("id", orgId)
     .maybeSingle();
 
-  return <AppShell orgName={org?.name ?? ""}>{children}</AppShell>;
+  const { data: claims } = await supabase.auth.getClaims();
+  const email = (claims?.claims as { email?: string } | undefined)?.email;
+
+  return (
+    <AppShell orgName={org?.name ?? ""} userEmail={email}>
+      {children}
+    </AppShell>
+  );
 }
