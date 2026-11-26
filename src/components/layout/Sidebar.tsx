@@ -11,14 +11,19 @@ export default function Sidebar({
   onClose,
   collapsed,
   onToggleCollapse,
+  orgName,
+  userEmail,
 }: {
   open: boolean;
   onClose: () => void;
   collapsed: boolean;
   onToggleCollapse: () => void;
+  orgName?: string;
+  userEmail?: string;
 }) {
   const pathname = usePathname();
   const hide = collapsed ? "lg:hidden" : "";
+  const initial = (userEmail ?? orgName ?? "").trim().charAt(0).toUpperCase();
 
   return (
     <>
@@ -43,15 +48,15 @@ export default function Sidebar({
           <Link
             href="/dashboard"
             onClick={onClose}
-            className="flex items-center gap-3 text-white"
+            className="flex items-center gap-3 text-[#ece7d8]"
             aria-label="LAHTEN AI"
           >
             <BrandMark size={26} />
             <span
-              className={`text-[13px] font-medium tracking-[0.28em] ${hide}`}
+              className={`font-serif text-[15px] tracking-[0.3em] ${hide}`}
             >
               LAHTEN
-              <span className="ml-1.5 tracking-[0.18em] text-electric">AI</span>
+              <span className="ml-2 text-electric">AI</span>
             </span>
           </Link>
           <button
@@ -89,7 +94,7 @@ export default function Sidebar({
                             collapsed ? "lg:justify-center lg:px-0" : ""
                           } ${
                             active
-                              ? "bg-white/[0.05] text-white"
+                              ? "bg-electric/10 text-[#f1ecdd]"
                               : "text-slate-400 hover:bg-white/[0.03] hover:text-slate-100"
                           }`}
                         >
@@ -115,23 +120,42 @@ export default function Sidebar({
           ))}
         </nav>
 
-        <div
-          className={`flex shrink-0 items-center justify-between border-t border-navy-700 px-5 py-3 ${
-            collapsed ? "lg:justify-center lg:px-0" : ""
-          }`}
-        >
-          <span className={`eyebrow ${hide}`}>Protótipo v0.5</span>
-          <button
-            onClick={onToggleCollapse}
-            className="hidden rounded-md p-1.5 text-slate-500 hover:text-white lg:block"
-            aria-label={collapsed ? "Expandir menu" : "Recolher menu"}
+        <div className="shrink-0 border-t border-navy-700 p-3">
+          <div
+            className={`flex items-center gap-3 rounded-md px-2 py-2 ${
+              collapsed ? "lg:justify-center lg:px-0" : ""
+            }`}
           >
-            {collapsed ? (
-              <PanelLeftOpen size={16} strokeWidth={1.6} />
-            ) : (
-              <PanelLeftClose size={16} strokeWidth={1.6} />
-            )}
-          </button>
+            <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-electric/40 bg-navy-800 text-xs font-medium text-electric">
+              {initial || "·"}
+            </span>
+            <div className={`min-w-0 flex-1 ${hide}`}>
+              <p className="truncate text-xs text-slate-200">
+                {userEmail ?? "Usuário"}
+              </p>
+              <p className="truncate text-[11px] text-slate-500">
+                {orgName ?? ""}
+              </p>
+            </div>
+          </div>
+          <div
+            className={`mt-1 flex items-center justify-between px-2 ${
+              collapsed ? "lg:justify-center" : ""
+            }`}
+          >
+            <span className={`eyebrow ${hide}`}>Protótipo v0.6</span>
+            <button
+              onClick={onToggleCollapse}
+              className="hidden rounded-md p-1.5 text-slate-500 hover:text-white lg:block"
+              aria-label={collapsed ? "Expandir menu" : "Recolher menu"}
+            >
+              {collapsed ? (
+                <PanelLeftOpen size={16} strokeWidth={1.6} />
+              ) : (
+                <PanelLeftClose size={16} strokeWidth={1.6} />
+              )}
+            </button>
+          </div>
         </div>
       </aside>
     </>
