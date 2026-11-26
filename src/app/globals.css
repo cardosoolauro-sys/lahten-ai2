@@ -1,12 +1,20 @@
 @import "tailwindcss";
 
 @theme {
-  --color-navy-950: #060a14;
-  --color-navy-900: #0b1120;
-  --color-navy-800: #111a2d;
-  --color-navy-700: #1c2943;
-  --color-electric: #3d6dff;
-  --color-electric-soft: #8ea8ff;
+  /* Verde quase preto (fundos e linhas) */
+  --color-navy-950: #06100c;
+  --color-navy-900: #0a1913;
+  --color-navy-800: #112219;
+  --color-navy-700: #1d3a2e;
+  /* Dourado champagne (destaque) */
+  --color-electric: #c8a96a;
+  --color-electric-soft: #e3cf9f;
+  /* Cinzas quentes para textos secundários */
+  --color-slate-200: #dcd9cd;
+  --color-slate-300: #c4c1b5;
+  --color-slate-400: #9d9b90;
+  --color-slate-500: #77766c;
+  --color-slate-600: #55554e;
 }
 
 @theme inline {
@@ -21,17 +29,17 @@
 
   body {
     background: var(--color-navy-950);
-    color: #e4e9f5;
+    color: #ece7d8;
     -webkit-font-smoothing: antialiased;
   }
 
   h1 {
     font-family: var(--font-serif);
-    letter-spacing: -0.015em;
+    letter-spacing: -0.01em;
   }
 
   ::selection {
-    background: rgb(61 109 255 / 0.35);
+    background: rgb(200 169 106 / 0.3);
   }
 
   :focus-visible {
@@ -57,6 +65,11 @@
     font-weight: 500;
     letter-spacing: 0.14em;
     text-transform: uppercase;
-    color: #6b7791;
+    color: #7d8a7f;
   }
+}
+
+/* Botões principais em dourado: texto escuro para manter o contraste. */
+.bg-electric {
+  color: #0a1510 !important;
 }
