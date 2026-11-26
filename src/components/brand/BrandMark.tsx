@@ -14,7 +14,7 @@ export default function BrandMark({ size = 24 }: { size?: number }) {
         height="22"
         rx="5"
         stroke="currentColor"
-        strokeOpacity="0.35"
+        strokeOpacity="0.4"
       />
       <path
         d="M8 5v14h9"
@@ -22,7 +22,7 @@ export default function BrandMark({ size = 24 }: { size?: number }) {
         strokeWidth="2"
         strokeLinecap="square"
       />
-      <circle cx="16" cy="8" r="1.6" fill="#3d6dff" />
+      <circle cx="16" cy="8" r="1.6" fill="#c8a96a" />
     </svg>
   );
 }
