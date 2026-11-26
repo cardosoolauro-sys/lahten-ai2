@@ -1,150 +1,135 @@
 import Link from "next/link";
-import { revalidatePath } from "next/cache";
-import { createClient } from "@/lib/supabase/server";
+import { ArrowUpRight } from "lucide-react";
+import { modules } from "@/lib/modules";
 
-export const dynamic = "force-dynamic";
+const stats = [
+  { label: "Imóveis ativos", value: "128" },
+  { label: "Leads novos", value: "34" },
+  { label: "Negociações", value: "17" },
+  { label: "Locações ativas", value: "52" },
+];
 
-const ACTIVITY_LABELS: Record<string, string> = {
-  note: "Nota",
-  call: "Ligação",
-  visit: "Visita",
-  email: "E-mail",
-  task: "Tarefa",
-};
+const activity = [
+  "Novo lead cadastrado: Apartamento 3 quartos",
+  "Visita agendada para sexta-feira",
+  "Contrato de locação aguardando revisão",
+  "Proposta enviada ao cliente",
+];
 
-async function criarOrganizacao(formData: FormData) {
-  "use server";
-  const nome = String(formData.get("nome") ?? "").trim();
-  if (!nome) return;
-  const supabase = await createClient();
-  await supabase.rpc("create_organization", { p_name: nome });
-  revalidatePath("/dashboard");
-}
+const agents = [
+  { name: "Sales Agent", role: "Funil e propostas" },
+  { name: "Rental Agent", role: "Contratos e locações" },
+  { name: "Research Agent", role: "Pesquisa de mercado" },
+  { name: "Document Agent", role: "Análise de documentos" },
+  { name: "Financial Agent", role: "Cobranças e finanças" },
+  { name: "Customer Agent", role: "Atendimento a clientes" },
+  { name: "Operations Agent", role: "Rotinas operacionais" },
+];
 
-export default async function DashboardPage() {
-  const supabase = await createClient();
+const shortcuts = ["workspace", "knowledge", "documents", "crm"]
+  .map((slug) => modules.find((m) => m.slug === slug))
+  .filter((m): m is (typeof modules)[number] => Boolean(m));
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  if (!user) {
-    return (
-      <main style={{ padding: "2rem", maxWidth: 560 }}>
-        <h1>Dashboard</h1>
-        <p>Entre na sua conta para ver os números da operação.</p>
-        <p>
-          <Link href="/login">Entrar</Link>
-        </p>
-      </main>
-    );
-  }
-
-  const { count: orgCount } = await supabase
-    .from("memberships")
-    .select("org_id", { count: "exact", head: true });
-
-  if (!orgCount) {
-    return (
-      <main style={{ padding: "2rem", maxWidth: 560 }}>
-        <h1>Dashboard</h1>
-        <p>Você ainda não pertence a nenhuma imobiliária. Crie a primeira para começar.</p>
-        <form action={criarOrganizacao} style={{ display: "flex", gap: 8 }}>
-          <input
-            name="nome"
-            placeholder="Nome da imobiliária"
-            required
-            style={{ flex: 1, padding: "0.5rem" }}
-          />
-          <button type="submit" style={{ padding: "0.5rem 1rem" }}>
-            Criar imobiliária
-          </button>
-        </form>
-      </main>
-    );
-  }
-
-  const [imoveis, leads, negociacoes, locacoes, atividades] = await Promise.all([
-    supabase
-      .from("properties")
-      .select("id", { count: "exact", head: true })
-      .in("status", ["available", "reserved"]),
-    supabase
-      .from("contacts")
-      .select("id", { count: "exact", head: true })
-      .eq("kind", "lead")
-      .eq("status", "new"),
-    supabase
-      .from("deals")
-      .select("id", { count: "exact", head: true })
-      .in("stage", ["proposal", "visit", "negotiation"]),
-    supabase
-      .from("rentals")
-      .select("id", { count: "exact", head: true })
-      .eq("status", "active"),
-    supabase
-      .from("activities")
-      .select("id, kind, description, created_at")
-      .order("created_at", { ascending: false })
-      .limit(5),
-  ]);
-
-  const cards = [
-    { label: "Imóveis ativos", value: imoveis.count ?? 0 },
-    { label: "Leads novos", value: leads.count ?? 0 },
-    { label: "Negociações em andamento", value: negociacoes.count ?? 0 },
-    { label: "Locações ativas", value: locacoes.count ?? 0 },
-  ];
-
-  const recentes = atividades.data ?? [];
-
+export default function DashboardPage() {
   return (
-    <main style={{ padding: "2rem", maxWidth: 960 }}>
-      <h1>Dashboard</h1>
-      <p>Visão geral da operação da imobiliária.</p>
+    <div className="mx-auto max-w-6xl space-y-10">
+      <header>
+        <p className="eyebrow">Visão geral</p>
+        <h1 className="mt-3 text-3xl font-medium sm:text-4xl">
+          Central de inteligência
+        </h1>
+        <p className="mt-3 max-w-xl text-sm leading-relaxed text-slate-400">
+          A operação da sua imobiliária em um só lugar.
+        </p>
+      </header>
 
-      <section
-        style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(auto-fit, minmax(190px, 1fr))",
-          gap: "1rem",
-          margin: "1.5rem 0",
-        }}
-      >
-        {cards.map((c) => (
-          <div
-            key={c.label}
-            style={{
-              border: "1px solid color-mix(in srgb, currentColor 20%, transparent)",
-              borderRadius: 8,
-              padding: "1rem",
-            }}
-          >
-            <div style={{ fontSize: "2rem", fontWeight: 600 }}>{c.value}</div>
-            <div style={{ opacity: 0.7 }}>{c.label}</div>
-          </div>
-        ))}
+      <div className="flex items-start gap-3 rounded-lg border border-electric/25 bg-electric/[0.07] px-4 py-3 text-[13px] text-electric-soft">
+        <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-electric" />
+        <p>
+          Dados de demonstração. Os indicadores e a atividade abaixo não são
+          reais nem estão conectados ao banco de dados.
+        </p>
+      </div>
+
+      <section aria-label="Indicadores">
+        <div className="grid grid-cols-2 gap-px overflow-hidden rounded-xl border border-navy-700 bg-navy-700 lg:grid-cols-4">
+          {stats.map((s) => (
+            <div key={s.label} className="bg-navy-900 p-5 sm:p-6">
+              <p className="eyebrow">{s.label}</p>
+              <p className="mt-4 font-serif text-4xl font-medium tracking-tight">
+                {s.value}
+              </p>
+            </div>
+          ))}
+        </div>
       </section>
 
-      <section>
-        <h2>Atividade recente</h2>
-        {recentes.length === 0 ? (
-          <p>
-            Nenhuma atividade registrada ainda. Cadastre um imóvel ou um lead para começar.
-          </p>
-        ) : (
-          <ul style={{ paddingLeft: "1.2rem" }}>
-            {recentes.map((a) => (
-              <li key={a.id} style={{ marginBottom: 6 }}>
-                <strong>{ACTIVITY_LABELS[a.kind] ?? a.kind}:</strong> {a.description}{" "}
-                <span style={{ opacity: 0.6 }}>
-                  ({new Date(a.created_at).toLocaleDateString("pt-BR")})
+      <section aria-label="Acesso rápido">
+        <p className="eyebrow mb-4">Acesso rápido</p>
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          {shortcuts.map((m) => {
+            const Icon = m.icon;
+            return (
+              <Link
+                key={m.slug}
+                href={`/${m.slug}`}
+                className="group rounded-xl border border-navy-700 bg-navy-900 p-5 hover:border-electric/40"
+              >
+                <div className="flex items-center justify-between">
+                  <Icon size={18} strokeWidth={1.6} className="text-electric" />
+                  <ArrowUpRight
+                    size={16}
+                    strokeWidth={1.6}
+                    className="text-slate-600 group-hover:text-electric-soft"
+                  />
+                </div>
+                <p className="mt-6 text-sm font-medium">{m.label}</p>
+                <p className="mt-1 line-clamp-2 text-xs leading-relaxed text-slate-500">
+                  {m.description}
+                </p>
+              </Link>
+            );
+          })}
+        </div>
+      </section>
+
+      <div className="grid gap-10 lg:grid-cols-5">
+        <section className="lg:col-span-3">
+          <p className="eyebrow mb-4">Atividade recente (exemplo)</p>
+          <ul className="border-t border-navy-700">
+            {activity.map((a) => (
+              <li
+                key={a}
+                className="flex items-start gap-3 border-b border-navy-700 py-3.5 text-sm text-slate-300"
+              >
+                <span className="mt-2 h-1 w-1 shrink-0 rounded-full bg-electric" />
+                {a}
+              </li>
+            ))}
+          </ul>
+        </section>
+
+        <section className="lg:col-span-2">
+          <p className="eyebrow mb-4">Agentes de IA</p>
+          <ul className="border-t border-navy-700">
+            {agents.map((a) => (
+              <li
+                key={a.name}
+                className="flex items-center justify-between gap-3 border-b border-navy-700 py-3"
+              >
+                <div className="min-w-0">
+                  <p className="truncate text-sm text-slate-200">{a.name}</p>
+                  <p className="truncate text-xs text-slate-500">{a.role}</p>
+                </div>
+                <span className="flex shrink-0 items-center gap-1.5 text-[11px] text-slate-500">
+                  <span className="h-1.5 w-1.5 rounded-full bg-slate-600" />
+                  Não conectado
                 </span>
               </li>
             ))}
           </ul>
-        )}
-      </section>
-    </main>
+        </section>
+      </div>
+    </div>
   );
 }
