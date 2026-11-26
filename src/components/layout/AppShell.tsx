@@ -7,9 +7,11 @@ import Topbar from "./Topbar";
 export default function AppShell({
   children,
   orgName,
+  userEmail,
 }: {
   children: React.ReactNode;
   orgName?: string;
+  userEmail?: string;
 }) {
   const [open, setOpen] = useState(false);
   const [collapsed, setCollapsed] = useState(false);
@@ -21,6 +23,8 @@ export default function AppShell({
         onClose={() => setOpen(false)}
         collapsed={collapsed}
         onToggleCollapse={() => setCollapsed((v) => !v)}
+        orgName={orgName}
+        userEmail={userEmail}
       />
       <div
         className={`transition-[padding] duration-200 ${
