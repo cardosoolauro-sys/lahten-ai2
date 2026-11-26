@@ -1,65 +1,50 @@
-import Link from "next/link";
-import Field from "@/components/auth/Field";
-import SubmitButton from "@/components/auth/SubmitButton";
-import { login } from "@/lib/auth/actions";
-import { errorMessage, infoMessage } from "@/lib/auth/messages";
+import BrandMark from "@/components/brand/BrandMark";
+import LoginForm from "@/components/auth/LoginForm";
 
 export default async function LoginPage({
   searchParams,
 }: {
-  searchParams: Promise<{ error?: string; message?: string }>;
+  searchParams: Promise<{ erro?: string }>;
 }) {
-  const { error, message } = await searchParams;
-  const errorText = errorMessage(error);
-  const infoText = infoMessage(message);
+  const { erro } = await searchParams;
+  const notice =
+    erro === "confirmacao"
+      ? "Não foi possível confirmar o e-mail. O link pode ter expirado. Tente criar a conta novamente."
+      : undefined;
 
   return (
-    <>
-      <h1 className="text-xl font-semibold tracking-tight">Entrar</h1>
-      <p className="mt-1 text-sm text-slate-400">
-        Acesse a sua conta para continuar.
-      </p>
-
-      {infoText && (
-        <div
-          role="status"
-          className="mt-5 rounded-lg border border-electric/30 bg-electric/10 px-3 py-2.5 text-sm text-electric-soft"
-        >
-          {infoText}
+    <main className="grid min-h-screen lg:grid-cols-[1.15fr_1fr]">
+      <section
+        className="relative flex min-h-[260px] flex-col justify-between p-6 lg:min-h-screen lg:p-14"
+        style={{
+          backgroundColor: "#07120d",
+          backgroundImage:
+            "linear-gradient(180deg, rgba(6,16,12,0.6) 0%, rgba(6,16,12,0.3) 45%, rgba(6,16,12,0.88) 100%), url('/images/login-hero.jpg')",
+          backgroundSize: "cover",
+          backgroundPosition: "center",
+        }}
+      >
+        <div className="flex items-center gap-3 text-[#ece7d8]">
+          <BrandMark size={30} />
+          <span className="font-serif text-lg tracking-[0.3em]">
+            LAHTEN <span className="ml-1 text-electric">AI</span>
+          </span>
         </div>
-      )}
-      {errorText && (
-        <div
-          role="alert"
-          className="mt-5 rounded-lg border border-red-500/30 bg-red-500/10 px-3 py-2.5 text-sm text-red-300"
-        >
-          {errorText}
+
+        <div className="max-w-md">
+          <p className="font-serif text-2xl leading-snug text-[#f1ecdd] sm:text-3xl lg:text-4xl">
+            A inteligência por trás dos negócios imobiliários.
+          </p>
+          <div className="mt-6 h-px w-16 bg-electric/70" />
+          <p className="eyebrow mt-5 hidden !text-slate-300 lg:block">
+            Inovação • Estratégia • Resultados
+          </p>
         </div>
-      )}
+      </section>
 
-      <form action={login} className="mt-6 space-y-4">
-        <Field
-          label="E-mail"
-          name="email"
-          type="email"
-          autoComplete="email"
-          placeholder="voce@imobiliaria.com"
-        />
-        <Field
-          label="Senha"
-          name="password"
-          type="password"
-          autoComplete="current-password"
-        />
-        <SubmitButton pendingText="Entrando...">Entrar</SubmitButton>
-      </form>
-
-      <p className="mt-6 text-center text-sm text-slate-400">
-        Ainda não tem conta?{" "}
-        <Link href="/cadastro" className="text-electric-soft hover:text-white">
-          Criar conta
-        </Link>
-      </p>
-    </>
+      <section className="flex items-center justify-center bg-navy-950 px-6 py-12 lg:px-14">
+        <LoginForm notice={notice} />
+      </section>
+    </main>
   );
 }
