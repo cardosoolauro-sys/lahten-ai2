@@ -1,54 +1,84 @@
-
 import BrandMark from "@/components/brand/BrandMark";
 import LoginForm from "@/components/auth/LoginForm";
-import { errorMessage, infoMessage } from "@/lib/auth/messages";
 
 export default async function LoginPage({
   searchParams,
 }: {
-  searchParams: Promise<{ erro?: string; error?: string; message?: string }>;
+  searchParams: Promise<{ erro?: string }>;
 }) {
-  const { erro, error, message } = await searchParams;
-
-  // "error" e "message" vêm das ações de login/cadastro e do link de confirmação.
+  const { erro } = await searchParams;
   const notice =
     erro === "confirmacao"
-      ? "Não foi possível confirmar o e-mail. O link pode ter expirado."
-      : (errorMessage(error) ?? infoMessage(message) ?? undefined);
+      ? "Não foi possível confirmar o e-mail. O link pode ter expirado. Tente criar a conta novamente."
+      : undefined;
 
   return (
-    <main className="grid min-h-screen bg-[#07130e] lg:grid-cols-[58fr_42fr]">
-      {/* FOTO À ESQUERDA */}
+    <main className="grid min-h-screen lg:grid-cols-[61fr_39fr]">
       <section
-        className="relative flex min-h-[420px] flex-col justify-between overflow-hidden px-8 py-10 lg:min-h-screen lg:px-16 lg:py-14"
+        className="relative flex min-h-[480px] flex-col justify-between overflow-hidden px-7 py-9 lg:min-h-screen lg:border-r lg:border-electric/40 lg:py-16 lg:pl-[12%] lg:pr-10"
         style={{
+          backgroundColor: "#07120d",
           backgroundImage:
-            "linear-gradient(180deg, rgba(6,16,12,.35), rgba(6,16,12,.12) 45%, rgba(6,16,12,.85)), url('/images/login-hero.jpg')",
-          backgroundSize: "cover",
-          backgroundPosition: "center",
+            "linear-gradient(90deg, rgba(6,16,12,0.5) 0%, rgba(6,16,12,0.05) 55%, rgba(6,16,12,0) 100%), linear-gradient(180deg, rgba(6,16,12,0.25) 0%, rgba(6,16,12,0) 35%, rgba(6,16,12,0.45) 100%), url('/images/login-hero.jpg'), url('/images/architecture.svg')",
+          backgroundSize: "100% 100%, 100% 100%, cover, cover",
+          backgroundPosition: "center, center, right center, center",
+          backgroundRepeat: "no-repeat",
         }}
       >
-        <div className="flex items-center gap-3 text-[#f0eadb]">
-          <BrandMark size={32} />
-          <span className="font-serif text-xl tracking-[0.3em]">
-            LAHTEN <span className="text-[#c8a96a]">AI</span>
+        <span
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-y-0 left-[3.5%] hidden w-px bg-electric/35 lg:block"
+        />
+
+        <div className="relative flex items-center gap-4">
+          <BrandMark size={34} />
+          <span className="font-serif text-2xl font-light tracking-[0.32em] text-[#f1ecdd]">
+            LAHTEN AI
           </span>
         </div>
 
-        <div className="max-w-xl">
-          <h1 className="font-serif text-4xl leading-tight text-[#f4efe0] lg:text-5xl">
-            A inteligência por trás dos negócios imobiliários.
+        <div className="relative max-w-xl">
+          <h1 className="font-serif text-4xl font-light leading-[1.12] text-[#f4efe0] sm:text-5xl lg:text-[3.6rem]">
+            A inteligência
+            <br />
+            por trás dos
+            <br />
+            <em className="text-[#d8bf92]">negócios imobiliários.</em>
           </h1>
-          <div className="mt-8 h-px w-20 bg-[#c8a96a]" />
-          <p className="mt-6 text-[10px] uppercase tracking-[0.25em] text-[#eee6d5]">
-            INOVAÇÃO • ESTRATÉGIA • RESULTADOS
-          </p>
+          <div className="mt-9 h-px w-14 bg-electric/70" />
+        </div>
+
+        <div className="relative">
+          <div className="h-px w-80 max-w-full bg-electric/40" />
+          <div className="mt-5 flex items-center gap-5">
+            <p className="eyebrow !tracking-[0.3em] !text-slate-300">
+              Inovação • Estratégia • Resultados
+            </p>
+            <span className="hidden h-px flex-1 bg-electric/30 sm:block" />
+          </div>
         </div>
       </section>
 
-      {/* FORMULÁRIO À DIREITA */}
-      <section className="flex min-h-screen items-center justify-center bg-[#07130e] px-7 py-14 lg:px-14">
-        <LoginForm notice={notice} />
+      <section
+        className="relative flex items-center justify-center overflow-hidden px-6 py-14 lg:px-12"
+        style={{
+          background:
+            "radial-gradient(120% 90% at 85% 0%, #153227 0%, #0b1a13 45%, #07130e 100%)",
+        }}
+      >
+        <svg
+          aria-hidden="true"
+          className="pointer-events-none absolute -right-10 -top-24 h-[620px] w-[620px] opacity-70"
+          viewBox="0 0 600 600"
+          fill="none"
+        >
+          <circle cx="520" cy="80" r="330" stroke="#c8a96a" strokeOpacity="0.16" />
+          <circle cx="520" cy="80" r="470" stroke="#c8a96a" strokeOpacity="0.1" />
+        </svg>
+
+        <div className="relative z-10 w-full max-w-[26rem]">
+          <LoginForm notice={notice} />
+        </div>
       </section>
     </main>
   );
