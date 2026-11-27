@@ -10,7 +10,7 @@ import {
   Sparkles,
   Clock3,
 } from "lucide-react";
-import { STAGES } from "@/lib/deals/constants";
+import { stageLabel } from "@/lib/deals/constants";
 import { createClient } from "@/lib/supabase/server";
 
 const agents = [
@@ -140,7 +140,7 @@ export default async function DashboardPage() {
     ),
     ...(recentDeals.data ?? []).map(
       (d: { stage: string; created_at: string }) => ({
-        text: `Negócio registrado (${STAGES[d.stage] ?? d.stage})`,
+        text: `Negócio registrado (${stageLabel(d.stage)})`,
         at: d.created_at,
       })
     ),
