@@ -14,23 +14,16 @@ export default function AppShell({
   userEmail?: string;
 }) {
   const [open, setOpen] = useState(false);
-  const [collapsed, setCollapsed] = useState(false);
 
   return (
     <div className="min-h-screen">
       <Sidebar
         open={open}
         onClose={() => setOpen(false)}
-        collapsed={collapsed}
-        onToggleCollapse={() => setCollapsed((v) => !v)}
         orgName={orgName}
         userEmail={userEmail}
       />
-      <div
-        className={`transition-[padding] duration-200 ${
-          collapsed ? "lg:pl-[72px]" : "lg:pl-64"
-        }`}
-      >
+      <div className="lg:pl-60">
         <Topbar onMenu={() => setOpen(true)} orgName={orgName} />
         <main className="px-4 py-6 sm:px-6 sm:py-8 lg:px-10 lg:py-10">
           {children}
