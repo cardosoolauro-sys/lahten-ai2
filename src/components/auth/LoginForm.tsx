@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useActionState, useState } from "react";
+import { useState } from "react";
 import { login, signup } from "@/lib/auth/actions";
 
 const inputCls =
@@ -9,23 +9,13 @@ const inputCls =
 
 export default function LoginForm({ notice }: { notice?: string }) {
   const [mode, setMode] = useState<"login" | "signup">("login");
-
-  const [loginState, loginAction, loginPending] = useActionState(
-    login,
-    undefined
-  );
-  const [signupState, signupAction, signupPending] = useActionState(
-    signup,
-    undefined
-  );
-
   const isLogin = mode === "login";
-  const state = isLogin ? loginState : signupState;
-  const pending = isLogin ? loginPending : signupPending;
 
   return (
     <div className="w-full max-w-[390px]">
-      <p className="eyebrow !text-[#c8a96a]">LAHTEN AI · PLATAFORMA</p>
+      <p className="eyebrow !text-[#c8a96a]">
+        LAHTEN AI · PLATAFORMA
+      </p>
 
       <h2 className="mt-5 font-serif text-3xl font-normal tracking-wide text-[#f0eadb] sm:text-4xl">
         {isLogin ? "Bem-vindo de volta." : "Comece sua jornada."}
@@ -45,14 +35,44 @@ export default function LoginForm({ notice }: { notice?: string }) {
 
       <form
         key={mode}
-        action={isLogin ? loginAction : signupAction}
+        action={isLogin ? login : signup}
         className="mt-10 space-y-7"
       >
+        {!isLogin && (
+          <>
+            <div>
+              <label htmlFor="full_name" className="mb-1 block text-[10px] font-medium uppercase tracking-[0.2em] text-[#a9ad9f]">
+                Nome completo
+              </label>
+              <input
+                id="full_name"
+                name="full_name"
+                type="text"
+                required
+                autoComplete="name"
+                placeholder="Seu nome"
+                className={inputCls}
+              />
+            </div>
+
+            <div>
+              <label htmlFor="org_name" className="mb-1 block text-[10px] font-medium uppercase tracking-[0.2em] text-[#a9ad9f]">
+                Nome da imobiliária
+              </label>
+              <input
+                id="org_name"
+                name="org_name"
+                type="text"
+                required
+                placeholder="Sua imobiliária"
+                className={inputCls}
+              />
+            </div>
+          </>
+        )}
+
         <div>
-          <label
-            htmlFor="email"
-            className="mb-1 block text-[10px] font-medium uppercase tracking-[0.2em] text-[#a9ad9f]"
-          >
+          <label htmlFor="email" className="mb-1 block text-[10px] font-medium uppercase tracking-[0.2em] text-[#a9ad9f]">
             E-mail
           </label>
           <input
@@ -67,10 +87,7 @@ export default function LoginForm({ notice }: { notice?: string }) {
         </div>
 
         <div>
-          <label
-            htmlFor="password"
-            className="mb-1 block text-[10px] font-medium uppercase tracking-[0.2em] text-[#a9ad9f]"
-          >
+          <label htmlFor="password" className="mb-1 block text-[10px] font-medium uppercase tracking-[0.2em] text-[#a9ad9f]">
             Senha
           </label>
           <input
@@ -86,19 +103,11 @@ export default function LoginForm({ notice }: { notice?: string }) {
           />
         </div>
 
-        {state?.error && (
-          <p className="text-sm text-red-400">{state.error}</p>
-        )}
-        {state?.message && (
-          <p className="text-sm text-emerald-300">{state.message}</p>
-        )}
-
         <button
           type="submit"
-          disabled={pending}
-          className="w-full rounded-sm bg-[#c8a96a] px-5 py-4 text-[11px] font-semibold uppercase tracking-[0.25em] text-[#101a12] transition-all hover:bg-[#e3cf9f] disabled:opacity-60"
+          className="w-full rounded-sm bg-[#c8a96a] px-5 py-4 text-[11px] font-semibold uppercase tracking-[0.25em] text-[#101a12] transition-all hover:bg-[#e3cf9f]"
         >
-          {pending ? "Aguarde..." : isLogin ? "Acessar plataforma" : "Criar conta"}
+          {isLogin ? "Acessar plataforma" : "Criar conta"}
         </button>
       </form>
 
