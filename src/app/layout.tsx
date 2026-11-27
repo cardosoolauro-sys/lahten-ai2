@@ -6,6 +6,7 @@ const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
 const newsreader = Newsreader({
   subsets: ["latin"],
   variable: "--font-newsreader",
+  style: ["normal", "italic"],
 });
 
 export const metadata: Metadata = {
@@ -14,7 +15,7 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#060a14",
+  themeColor: "#06100c",
 };
 
 export default function RootLayout({
