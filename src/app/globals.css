@@ -1,15 +1,15 @@
+
 @import "tailwindcss";
 
 @theme {
-  /* Verde quase preto (fundos e linhas) */
   --color-navy-950: #06100c;
   --color-navy-900: #0a1913;
   --color-navy-800: #112219;
-  --color-navy-700: #1d3a2e;
-  /* Dourado champagne (destaque) */
+  --color-navy-700: #263b2e;
+
   --color-electric: #c8a96a;
   --color-electric-soft: #e3cf9f;
-  /* Cinzas quentes para textos secundários */
+
   --color-slate-200: #dcd9cd;
   --color-slate-300: #c4c1b5;
   --color-slate-400: #9d9b90;
@@ -25,51 +25,60 @@
 @layer base {
   html {
     color-scheme: dark;
+    background: #06100c;
   }
 
   body {
-    background: var(--color-navy-950);
+    min-height: 100vh;
+    background: #06100c;
     color: #ece7d8;
     -webkit-font-smoothing: antialiased;
   }
 
-  h1 {
+  h1,
+  h2,
+  h3 {
     font-family: var(--font-serif);
-    letter-spacing: -0.01em;
+    letter-spacing: -0.015em;
   }
 
   ::selection {
     background: rgb(200 169 106 / 0.3);
+    color: #fff;
   }
 
   :focus-visible {
-    outline: 2px solid var(--color-electric);
-    outline-offset: 2px;
+    outline: 2px solid #c8a96a;
+    outline-offset: 3px;
   }
 
   * {
     scrollbar-width: thin;
-    scrollbar-color: var(--color-navy-700) transparent;
+    scrollbar-color: #263b2e transparent;
   }
 
   a,
-  button {
-    transition-property: color, background-color, border-color, opacity;
-    transition-duration: 150ms;
+  button,
+  input {
+    transition:
+      color 180ms ease,
+      background-color 180ms ease,
+      border-color 180ms ease,
+      opacity 180ms ease;
   }
 }
 
 @layer components {
   .eyebrow {
-    font-size: 0.6875rem;
+    font-size: 0.65rem;
     font-weight: 500;
-    letter-spacing: 0.14em;
+    letter-spacing: 0.19em;
+    line-height: 1.5;
     text-transform: uppercase;
-    color: #7d8a7f;
+    color: #9d9b90;
   }
 }
 
-/* Botões principais em dourado: texto escuro para manter o contraste. */
 .bg-electric {
-  color: #0a1510 !important;
+  color: #101a12 !important;
 }
