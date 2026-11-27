@@ -1,6 +1,15 @@
+
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { ArrowUpRight } from "lucide-react";
+import {
+  ArrowUpRight,
+  Building2,
+  Users,
+  Handshake,
+  Activity,
+  Sparkles,
+  Clock3,
+} from "lucide-react";
 import { STAGES } from "@/lib/deals/constants";
 import { createClient } from "@/lib/supabase/server";
 
@@ -30,7 +39,7 @@ function firstName(email?: string): string {
   return token ? token.charAt(0).toUpperCase() + token.slice(1) : "";
 }
 
-type Activity = { text: string; at: string };
+type ActivityItem = { text: string; at: string };
 
 export default async function DashboardPage() {
   const supabase = await createClient();
@@ -39,6 +48,7 @@ export default async function DashboardPage() {
     .from("memberships")
     .select("org_id")
     .limit(1);
+
   const orgId = memberships?.[0]?.org_id;
   if (!orgId) redirect("/onboarding");
 
@@ -94,23 +104,28 @@ export default async function DashboardPage() {
   const conversion =
     won + lost > 0 ? `${Math.round((won / (won + lost)) * 100)}%` : null;
 
-  const stats: { label: string; value: string }[] = [
+  const stats = [
     {
-      label: "Imóveis ativos",
+      label: "Imóveis disponíveis",
       value: available.count === null ? "—" : String(available.count),
+      icon: Building2,
     },
     {
-      label: "Leads novos",
+      label: "Novos leads",
       value: newLeads.count === null ? "—" : String(newLeads.count),
+      icon: Users,
     },
     {
-      label: "Negociações em andamento",
+      label: "Em negociação",
       value: openDeals.count === null ? "—" : String(openDeals.count),
+      icon: Handshake,
     },
+    ...(conversion
+      ? [{ label: "Conversão", value: conversion, icon: Activity }]
+      : []),
   ];
-  if (conversion) stats.push({ label: "Conversão", value: conversion });
 
-  const activity: Activity[] = [
+  const activity: ActivityItem[] = [
     ...(recentContacts.data ?? []).map(
       (c: { full_name: string; created_at: string }) => ({
         text: `Novo contato: ${c.full_name}`,
@@ -134,108 +149,176 @@ export default async function DashboardPage() {
     .slice(0, 6);
 
   return (
-    <div className="mx-auto max-w-6xl space-y-10">
+    <div className="mx-auto max-w-[1440px] space-y-8">
       <section
-        className="relative overflow-hidden rounded-2xl border border-navy-700"
+        className="relative isolate flex min-h-[280px] items-end overflow-hidden rounded-sm border border-white/[0.08] sm:min-h-[340px]"
         style={{
           backgroundColor: "#0a1913",
           backgroundImage:
-            "linear-gradient(180deg, rgba(6,16,12,0.72) 0%, rgba(6,16,12,0.6) 45%, rgba(6,16,12,0.92) 100%), url('/images/dashboard-hero.jpg')",
+            "linear-gradient(90deg, rgba(5,17,12,0.88) 0%, rgba(5,17,12,0.56) 58%, rgba(5,17,12,0.18) 100%), linear-gradient(0deg, rgba(5,17,12,0.48), transparent 65%), url('/images/dashboard-hero.jpg')",
           backgroundSize: "cover",
           backgroundPosition: "center",
         }}
       >
-        <div className="px-5 pb-6 pt-8 sm:px-8 sm:pt-12 lg:px-10 lg:pt-16">
-          <p className="eyebrow !text-electric">{org.data?.name ?? ""}</p>
-          <h1 className="mt-4 text-3xl font-medium sm:text-5xl">
+        <div className="relative z-10 max-w-2xl px-6 py-9 sm:px-10 sm:py-12 lg:px-14 lg:py-14">
+          <p className="eyebrow !text-electric">
+            {org.data?.name ?? "LAHTEN AI"}
+          </p>
+          <h1 className="mt-5 text-4xl font-normal leading-tight text-[#f4efe0] sm:text-5xl lg:text-6xl">
             {greeting()}
-            {name ? `, ${name}` : ""}
+            {name ? `, ${name}.` : "."}
           </h1>
-          <p className="mt-3 max-w-md text-sm leading-relaxed text-slate-300">
+          <p className="mt-4 max-w-md text-sm leading-7 text-[#d5d4c9] sm:text-base">
             A inteligência por trás dos negócios imobiliários.
           </p>
-
-          <div
-            className={`mt-10 grid gap-px overflow-hidden rounded-xl border border-white/10 bg-white/10 ${
-              stats.length === 4
-                ? "grid-cols-2 lg:grid-cols-4"
-                : "grid-cols-1 sm:grid-cols-3"
-            }`}
-          >
-            {stats.map((s) => (
-              <div
-                key={s.label}
-                className="bg-navy-950/70 p-4 backdrop-blur-sm sm:p-5"
-              >
-                <p className="eyebrow">{s.label}</p>
-                <p className="mt-3 font-serif text-3xl font-medium sm:text-4xl">
-                  {s.value}
-                </p>
-              </div>
-            ))}
-          </div>
+          <div className="mt-7 h-px w-16 bg-electric" />
+          <p className="mt-4 text-[10px] uppercase tracking-[0.25em] text-[#c8c4b5]">
+            Inovação · Estratégia · Resultados
+          </p>
         </div>
       </section>
 
-      <div className="grid gap-10 lg:grid-cols-5">
-        <section className="lg:col-span-3">
-          <p className="eyebrow mb-4">Atividade recente</p>
-          {activity.length === 0 ? (
-            <p className="border-t border-navy-700 py-6 text-sm text-slate-500">
-              Nenhuma atividade ainda. Cadastre contatos, imóveis e negócios
-              para vê-los aqui.
-            </p>
-          ) : (
-            <ul className="border-t border-navy-700">
-              {activity.map((a, i) => (
-                <li
-                  key={`${a.at}-${i}`}
-                  className="flex items-start justify-between gap-4 border-b border-navy-700 py-3.5"
-                >
-                  <p className="text-sm text-slate-200">{a.text}</p>
-                  <p className="shrink-0 text-xs text-slate-500">
-                    {new Date(a.at).toLocaleString("pt-BR", {
-                      timeZone: "America/Sao_Paulo",
-                      dateStyle: "short",
-                      timeStyle: "short",
-                    })}
+      <section>
+        <div className="mb-5 flex items-center justify-between">
+          <div>
+            <p className="eyebrow">Visão geral</p>
+            <h2 className="mt-1 font-serif text-2xl text-[#eee9dc]">
+              Desempenho da operação
+            </h2>
+          </div>
+          <span className="hidden text-[10px] uppercase tracking-[0.18em] text-slate-500 sm:block">
+            Dados da sua organização
+          </span>
+        </div>
+
+        <div
+          className={`grid grid-cols-1 gap-3 sm:grid-cols-2 ${
+            stats.length === 4 ? "xl:grid-cols-4" : "xl:grid-cols-3"
+          }`}
+        >
+          {stats.map((stat) => {
+            const Icon = stat.icon;
+            return (
+              <article
+                key={stat.label}
+                className="group border border-white/[0.08] bg-[#0a1913] px-5 py-5 transition-colors hover:border-electric/40"
+              >
+                <div className="flex items-center justify-between">
+                  <p className="text-xs tracking-wide text-slate-400">
+                    {stat.label}
                   </p>
+                  <Icon
+                    size={17}
+                    strokeWidth={1.4}
+                    className="text-electric/75"
+                  />
+                </div>
+                <p className="mt-5 font-serif text-4xl text-[#f0eadb]">
+                  {stat.value}
+                </p>
+                <div className="mt-5 h-px w-full bg-white/[0.07] transition-colors group-hover:bg-electric/40" />
+              </article>
+            );
+          })}
+        </div>
+      </section>
+
+      <div className="grid gap-8 xl:grid-cols-[1.45fr_1fr]">
+        <section className="min-w-0">
+          <div className="mb-5 flex items-end justify-between">
+            <div>
+              <p className="eyebrow">Acompanhamento</p>
+              <h2 className="mt-1 font-serif text-2xl text-[#eee9dc]">
+                Atividade recente
+              </h2>
+            </div>
+            <Clock3 size={18} className="mb-1 text-electric/70" />
+          </div>
+
+          {activity.length === 0 ? (
+            <div className="border-y border-white/[0.09] py-8">
+              <p className="text-sm text-slate-400">
+                Nenhuma atividade registrada ainda.
+              </p>
+              <p className="mt-2 text-xs text-slate-500">
+                Quando sua equipe cadastrar contatos, imóveis e negócios, as
+                atualizações aparecerão aqui.
+              </p>
+            </div>
+          ) : (
+            <ul className="border-t border-white/[0.09]">
+              {activity.map((item, index) => (
+                <li
+                  key={`${item.at}-${index}`}
+                  className="flex items-start gap-4 border-b border-white/[0.08] py-4"
+                >
+                  <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-electric" />
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm text-slate-200">{item.text}</p>
+                    <p className="mt-1.5 text-xs text-slate-500">
+                      {new Date(item.at).toLocaleString("pt-BR", {
+                        timeZone: "America/Sao_Paulo",
+                        dateStyle: "medium",
+                        timeStyle: "short",
+                      })}
+                    </p>
+                  </div>
                 </li>
               ))}
             </ul>
           )}
         </section>
 
-        <section className="lg:col-span-2">
-          <div className="mb-4 flex items-center justify-between">
-            <p className="eyebrow">Agentes de IA</p>
+        <section className="min-w-0">
+          <div className="mb-5 flex items-end justify-between">
+            <div>
+              <p className="eyebrow">Inteligência artificial</p>
+              <h2 className="mt-1 font-serif text-2xl text-[#eee9dc]">
+                Seus agentes
+              </h2>
+            </div>
             <Link
               href="/agents"
-              className="flex items-center gap-1 text-xs text-electric hover:text-electric-soft"
+              className="flex items-center gap-1 text-xs text-electric hover:text-[#e3cf9f]"
             >
-              Ver detalhes
-              <ArrowUpRight size={14} strokeWidth={1.6} />
+              Ver detalhes <ArrowUpRight size={14} />
             </Link>
           </div>
-          <ul className="border-t border-navy-700">
-            {agents.map((a) => (
-              <li
-                key={a.name}
-                className="flex items-center justify-between gap-3 border-b border-navy-700 py-3"
+
+          <div className="border-t border-white/[0.09]">
+            {agents.map((agent) => (
+              <div
+                key={agent.name}
+                className="flex items-center gap-3 border-b border-white/[0.08] py-4"
               >
-                <div className="min-w-0">
-                  <p className="truncate text-sm text-slate-200">{a.name}</p>
-                  <p className="truncate text-xs text-slate-500">{a.role}</p>
+                <div className="flex h-9 w-9 shrink-0 items-center justify-center border border-electric/20 bg-electric/[0.06]">
+                  <Sparkles
+                    size={16}
+                    strokeWidth={1.4}
+                    className="text-electric"
+                  />
                 </div>
-                <span className="flex shrink-0 items-center gap-1.5 text-[11px] text-slate-500">
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-sm text-slate-200">
+                    {agent.name}
+                  </p>
+                  <p className="mt-1 truncate text-xs text-slate-500">
+                    {agent.role}
+                  </p>
+                </div>
+                <span className="flex shrink-0 items-center gap-1.5 text-[10px] text-slate-500">
                   <span className="h-1.5 w-1.5 rounded-full bg-slate-600" />
                   Não conectado
                 </span>
-              </li>
+              </div>
             ))}
-          </ul>
+          </div>
+          <p className="mt-4 text-[11px] leading-5 text-slate-500">
+            O estado exibido corresponde ao estado atual de conexão dos
+            agentes.
+          </p>
         </section>
       </div>
     </div>
   );
-       }
+}
