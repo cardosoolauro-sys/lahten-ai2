@@ -1,18 +1,20 @@
 
 import BrandMark from "@/components/brand/BrandMark";
 import LoginForm from "@/components/auth/LoginForm";
+import { errorMessage, infoMessage } from "@/lib/auth/messages";
 
 export default async function LoginPage({
   searchParams,
 }: {
-  searchParams: Promise<{ erro?: string }>;
+  searchParams: Promise<{ erro?: string; error?: string; message?: string }>;
 }) {
-  const { erro } = await searchParams;
+  const { erro, error, message } = await searchParams;
 
+  // "error" e "message" vêm das ações de login/cadastro e do link de confirmação.
   const notice =
     erro === "confirmacao"
       ? "Não foi possível confirmar o e-mail. O link pode ter expirado."
-      : undefined;
+      : (errorMessage(error) ?? infoMessage(message) ?? undefined);
 
   return (
     <main className="grid min-h-screen bg-[#07130e] lg:grid-cols-[58fr_42fr]">
