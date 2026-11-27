@@ -8,10 +8,12 @@ export default function AppShell({
   children,
   orgName,
   userEmail,
+  role,
 }: {
   children: React.ReactNode;
   orgName?: string;
   userEmail?: string;
+  role?: string;
 }) {
   const [open, setOpen] = useState(false);
 
@@ -22,6 +24,7 @@ export default function AppShell({
         onClose={() => setOpen(false)}
         orgName={orgName}
         userEmail={userEmail}
+        role={role}
       />
       <div className="lg:pl-60">
         <Topbar onMenu={() => setOpen(true)} orgName={orgName} />
