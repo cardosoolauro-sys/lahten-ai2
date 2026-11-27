@@ -1,28 +1,18 @@
 export default function BrandMark({ size = 24 }: { size?: number }) {
   return (
     <svg
-      width={size}
+      width={Math.round(size * 0.75)}
       height={size}
-      viewBox="0 0 24 24"
+      viewBox="0 0 24 32"
       fill="none"
       aria-hidden="true"
+      stroke="#c8a96a"
+      strokeWidth="1.3"
+      strokeLinejoin="round"
     >
-      <rect
-        x="1"
-        y="1"
-        width="22"
-        height="22"
-        rx="5"
-        stroke="currentColor"
-        strokeOpacity="0.4"
-      />
-      <path
-        d="M8 5v14h9"
-        stroke="currentColor"
-        strokeWidth="2"
-        strokeLinecap="square"
-      />
-      <circle cx="16" cy="8" r="1.6" fill="#c8a96a" />
+      <path d="M3 30V9l9-6v27" />
+      <path d="M12 30V12l9-5v23" />
+      <path d="M9.5 15v15M15 18v12" strokeOpacity="0.55" />
     </svg>
   );
 }
