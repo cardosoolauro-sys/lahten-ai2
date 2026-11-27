@@ -49,9 +49,9 @@ export async function signup(formData: FormData): Promise<void> {
   const password = String(formData.get("password") ?? "");
 
   if (!fullName || !orgName || !email || !password) {
-    redirect("/cadastro?error=missing_fields");
+    redirect("/login?error=missing_fields");
   }
-  if (password.length < 8) redirect("/cadastro?error=weak_password");
+  if (password.length < 8) redirect("/login?error=weak_password");
 
   const origin = await getOrigin();
   const supabase = await createClient();
@@ -66,7 +66,7 @@ export async function signup(formData: FormData): Promise<void> {
   });
 
   if (error) {
-    redirect(`/cadastro?error=${encodeURIComponent(error.code ?? "unknown")}`);
+    redirect(`/login?error=${encodeURIComponent(error.code ?? "unknown")}`);
   }
 
   // Com a confirmação de e-mail desligada o Supabase já devolve a sessão.
