@@ -11,23 +11,27 @@ export default async function AppLayout({
 
   const { data: memberships } = await supabase
     .from("memberships")
-    .select("org_id")
+    .select("org_id, role")
     .limit(1);
 
-  const orgId = memberships?.[0]?.org_id;
-  if (!orgId) redirect("/onboarding");
+  const membership = memberships?.[0];
+  if (!membership) redirect("/onboarding");
 
   const { data: org } = await supabase
     .from("organizations")
     .select("name")
-    .eq("id", orgId)
+    .eq("id", membership.org_id)
     .maybeSingle();
 
   const { data: claims } = await supabase.auth.getClaims();
   const email = (claims?.claims as { email?: string } | undefined)?.email;
 
   return (
-    <AppShell orgName={org?.name ?? ""} userEmail={email}>
+    <AppShell
+      orgName={org?.name ?? ""}
+      userEmail={email}
+      role={String(membership.role)}
+    >
       {children}
     </AppShell>
   );
